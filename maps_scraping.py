@@ -200,7 +200,7 @@ def get_cafeterias_infos_from_maps(url):
     if is_valid_url(url):
         driver.get(url)
     else:
-        return {"phone":  "null", "street": "null", "number": "null" , "area": "null" , "zip": "null" ,"longitude": "null", "latitude":"null", "website": "null", "category": "null"}
+        return {"phone":  "null", "useeClientLocation": { "street": "null", "number": "null" , "area": "null" , "zip": "null" ,"longitude": "null", "latitude":"null"}, "website": "null", "category": "null"}
     try:
         # Try to find the button by its XPath
         button = driver.find_element(By.XPATH, "//button[@aria-label='Απόρριψη όλων']")
@@ -219,6 +219,8 @@ def get_cafeterias_infos_from_maps(url):
 
     # Find the anchor tag containing the specified ServiceLogin URL structure
     href_tag = soup.find('a', href=re.compile(r'https://accounts\.google\.com/ServiceLogin\?hl=en'))
+    if not href_tag:
+        href_tag = soup.find('a', href=re.compile(r'https://accounts\.google\.com/ServiceLogin\?hl=el'))
     longitude="null"
     latitude="null"
     if href_tag:
@@ -376,9 +378,9 @@ def get_cafeterias_infos_from_maps(url):
     else:
         print("Category button not found.")
     print(
-        f"Phone: {phone_number}, Street: {street}, Number: {number}, Area: {area}, Postal Code: {postal_code}, Website: {website}, Category: {category}")
+        f"Phone: {phone_number}, Street: {street}, Number: {number}, Area: {area}, Postal Code: {postal_code}, Website: {website}, Category: {category}, Longitude: {longitude}, Latitude: {latitude}")
     # Append parsed details to the row and write to CSV
-    result = {"phone": phone_number, "street": street , "number": number, "area": area, "zip": postal_code,"longitude": longitude, "latitude": latitude, "website": website, "category": category}
+    result = {"phone": phone_number, "useeClientLocation": { "street": street , "number": number, "area": area, "zip": postal_code,"longitude": longitude, "latitude": latitude}, "website": website, "category": category}
     # csvwriter.writerow(row)
     print("Data saved for this URL.\n")
     print("Done with this URL.\n")
@@ -436,23 +438,30 @@ def fetch_email(url):
                                              "//div[@aria-label='Decline optional cookies' and @role='button']")
         decline_button.click()
         print("Clicked 'Decline optional cookies' button.")
+
     except Exception as e:
         print("No Decline optional cookies!")
+
     try:
         # Locate and click the "Close" button
         close_button = driver.find_element(By.XPATH, "//div[@aria-label='Close' and @role='button']")
         close_button.click()
         print("Clicked the Close button.")
+
     except Exception as e:
         print("No close button!")
+    emails = []
     try:
         time.sleep(random.randint(3, 15))  # Wait for the page to load
         # Locate email element containing "@" in text
-        email_element = driver.find_element(By.XPATH, "//span[contains(text(), '@')]")
-        print(email_element.text)
+        email_element = driver.find_elements(By.XPATH, "//span[contains(text(), '@')]")
+        for element in email_element:
+            # email=email_validator_address(element.text)
+            emails.append(element.text)
+            print(element.text)
         # email = email_validator_address(email_element.text)
-        email = email_element.text
-        return email
+        # email = email_element.text
+        return emails
     except Exception as e:
         print(f"Could not fetch email from {url}")
         return "null"
@@ -482,7 +491,7 @@ for result in names_urls:
 websites = []
 for i in range(len(infos)):
     name = names_urls[i]["name"]
-    area = infos[i]["area"]
+    area = infos[i]["useeClientLocation"]["area"]
     website = get_facebook_cafeteria(name, area)
     websites.append(website)
 final=[]
@@ -516,8 +525,8 @@ except Exception as e:
 time.sleep(random.randint(3, 15))
 for i in range(len(websites)):
     url = websites[i]["facebook"]
-    email = fetch_email(url)
-    final.append({"name":names_urls[i]["name"], "pin":names_urls[i]["pin"], "phone": infos[i]["phone"], "street": infos[i]["street"], "number": infos[i]["number"], "area": infos[i]["area"], "zip": infos[i]["zip"], "longitude": infos[i]["longitude"], "latitude": infos[i]["latitude"],"website": infos[i]["website"], "category": infos[i]["category"], "facebook": websites[i]["facebook"], "email": email})
+    emails = fetch_email(url)
+    final.append({"name":names_urls[i]["name"], "pin":names_urls[i]["pin"], "phone": infos[i]["phone"],"useeClientLocation": infos[i]["useeClientLocation"], "website": infos[i]["website"], "category": infos[i]["category"], "facebook": websites[i]["facebook"], "emails": emails})
 driver.quit()
 # Assuming 'final' is your list of dictionaries
 with open("output.csv", "w", newline="", encoding="utf-8") as csvfile:
@@ -538,13 +547,14 @@ headers = {
   'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzMxNTM4NDYyLCJpYXQiOjE3MzA2NzQ0NjIsImp0aSI6IjFkYjQ3Mjg1LTU3M2MtNDQzZi1iN2MwLTEwYjEwMDgyZDZjYSJ9.RHPUJ4VwM7B2j2vzow4tKbScO-_QmNo4XIatTHbi03g'
 }
 # API endpoint URL (replace with your actual endpoint)
-url = "http://localhost:8080/api/v1/shop/"
+url = "http://localhost:8080/api/v1/useeClient/"
 
 # Assuming 'final' is your list of dictionaries
 for data_entry in final:
     # Send POST request with each entry as JSON
     payload = json.dumps(data_entry)
     response = requests.request("POST", url, headers=headers, data=payload)
+    print(response.text)
 
 print("All data sent to the API.")
 print(response.text)

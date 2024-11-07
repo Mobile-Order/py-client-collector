@@ -132,7 +132,7 @@ def get_cafeterias_infos_from_maps(url):
     if is_valid_url(url):
         driver.get(url)
     else:
-        return {"phone":  "null", "street": "null", "number": "null" , "area": "null" , "zip": "null" ,"website": "null", "category": "null"}
+        return {"phone":  "null", "useeClientLocation": { "street": "null", "number": "null" , "area": "null" , "zip": "null" ,"longitude": "null", "latitude":"null"}, "website": "null", "category": "null"}
     try:
         # Try to find the button by its XPath
         button = driver.find_element(By.XPATH, "//button[@aria-label='Απόρριψη όλων']")
@@ -148,6 +148,32 @@ def get_cafeterias_infos_from_maps(url):
     html_content = driver.page_source
     # Parse the HTML content
     soup = BeautifulSoup(html_content, 'html.parser')
+
+    # Find the anchor tag containing the specified ServiceLogin URL structure
+    href_tag = soup.find('a', href=re.compile(r'https://accounts\.google\.com/ServiceLogin\?hl=en'))
+    if not href_tag:
+        href_tag = soup.find('a', href=re.compile(r'https://accounts\.google\.com/ServiceLogin\?hl=el'))
+    longitude="null"
+    latitude="null"
+    if href_tag:
+        href = href_tag['href']
+
+        # Extract the 'continue' parameter that contains the encoded Google Maps URL
+        continue_url_match = re.search(r'continue=([^&]+)', href)
+        if continue_url_match:
+            encoded_url = continue_url_match.group(1)
+            decoded_url = requests.utils.unquote(encoded_url)
+
+            # Extract latitude and longitude from the decoded Google Maps URL
+            match = re.search(r'@([-+]?\d*\.\d+),([-+]?\d*\.\d+)', decoded_url)
+            if match:
+                latitude = match.group(1)
+                longitude = match.group(2)
+                print(f"Latitude: {latitude}, Longitude: {longitude}")
+            else:
+                print("Latitude and longitude not found in the Maps URL.")
+    else:
+        print("No matching ServiceLogin href found.")
     greek_phone=True
     greek_adress=True
     # Search for elements that contain 'Τηλέφωνο:', 'Διεύθυνση:', 'Ιστότοπος:' in the aria-label
@@ -213,19 +239,19 @@ def get_cafeterias_infos_from_maps(url):
             # First part: Street and Number
             street_number_part = address_parts[0].strip()
             # Second part: Area and Postal Code
-            if greek_adress:
-                area_postal_code_part = address_parts[length-1].strip()
-            else:
-                area_postal_code_part = address_parts[length - 2].strip()
+            area_postal_code_part = address_parts[length-1].strip()
             # Split street and number (assuming number is the last word)
-            street_parts = street_number_part.rsplit(' ', 1)
-            if len(street_parts) == 2:
-                street = street_parts[0]
-                numbers = re.findall(r'\d+', street_number_part)
-                if len(numbers)>0:
-                    number = numbers[0]
-                else:
-                    number = "null"
+            street_parts = street_number_part.rsplit(' ', 3)
+            street = street_parts[0]
+            numbers = re.findall(r'\d+', street_number_part)
+            if len(numbers)>0:
+                number = numbers[len(numbers)-1]
+            else:
+                number = "null"
+            i = 1
+            while i < len(street_parts) and not contains_numbers(street_parts[i]):
+                street = street+" "+street_parts[i]
+                i += 1
             # Split area and postal code, identifying postal code by checking for a space within it
             area_parts = area_postal_code_part.rsplit(' ', 2)
             if len(area_parts) >= 2:
@@ -240,20 +266,30 @@ def get_cafeterias_infos_from_maps(url):
             while i < len(address_parts) and not contains_numbers(street_number_part):
                 street_number_part = address_parts[i].strip()
                 i+=1
+            if i==len(address_parts):
+                i=1
+                street_number_part=address_parts[0].strip()
+                while i < (len(address_parts)-1):
+                    street_number_part+=" "+address_parts[i].strip()
+                    i+=1
             # Second part: Area and Postal Code
-            if greek_adress:
-                area_postal_code_part = address_parts[length - 1].strip()
-            else:
-                area_postal_code_part = address_parts[length - 2].strip()
+            i=0
+            area_postal_code_part = address_parts[length - 1].strip()
+            while i < len(address_parts) and not contains_numbers(area_postal_code_part):
+                area_postal_code_part = address_parts[i].strip()
+                i+=1
             # Split street and number (assuming number is the last word)
-            street_parts = street_number_part.rsplit(' ', 1)
-            if len(street_parts) == 2:
-                street = street_parts[0]
-                numbers = re.findall(r'\d+', street_number_part)
-                if len(numbers) > 0:
-                    number = numbers[0]
-                else:
-                    number = "null"
+            street_parts = street_number_part.rsplit(' ', 3)
+            street = street_parts[0]
+            numbers = re.findall(r'\d+', street_number_part)
+            if len(numbers)>0:
+                number = numbers[len(numbers)-1]
+            else:
+                number = "null"
+            i=1
+            while i < len(street_parts) and not contains_numbers(street_parts[i]):
+                street = street+" "+street_parts[i]
+                i += 1
             # Split area and postal code, identifying postal code by checking for a space within it
             area_parts = area_postal_code_part.rsplit(' ', 2)
             if len(area_parts) >= 2:
@@ -261,10 +297,10 @@ def get_cafeterias_infos_from_maps(url):
                 postal_code = " ".join(area_parts[1:]).strip()  # Join to handle postal codes with spaces
                 postal_code = postal_code.replace(" ", "")
     # Translate Street and Area to English using deep-translator
-    if street and greek_adress:
-        street = transliterate_greek(street)
-    if area and greek_adress:
-        area = transliterate_greek(area)
+    # if street and greek_adress:
+    street = transliterate_greek(street)
+    # if area and greek_adress:
+    area = transliterate_greek(area)
     # Extract the "category" (e.g., "Καφετέρια") from the HTML
     category = "null"
     category_button = soup.find("button", class_="DkEaL")
@@ -274,9 +310,9 @@ def get_cafeterias_infos_from_maps(url):
     else:
         print("Category button not found.")
     print(
-        f"Phone: {phone_number}, Street: {street}, Number: {number}, Area: {area}, Postal Code: {postal_code}, Website: {website}, Category: {category}")
+        f"Phone: {phone_number}, Street: {street}, Number: {number}, Area: {area}, Postal Code: {postal_code}, Website: {website}, Category: {category}, Longitude: {longitude}, Latitude: {latitude}")
     # Append parsed details to the row and write to CSV
-    result = {"phone": phone_number, "street": street , "number": number, "area": area, "zip": postal_code,"website": website, "category": category}
+    result = {"phone": phone_number, "useeClientLocation": { "street": street , "number": number, "area": area, "zip": postal_code,"longitude": longitude, "latitude": latitude}, "website": website, "category": category}
     # csvwriter.writerow(row)
     print("Data saved for this URL.\n")
     print("Done with this URL.\n")
@@ -346,7 +382,7 @@ def fetch_email(url):
         driver.get(url)
         print("valid")
     else:
-        return "null"
+        return []
     try:
         # Locate and click the "Decline optional cookies" button
         decline_button = driver.find_element(By.XPATH,
@@ -365,22 +401,24 @@ def fetch_email(url):
 
     except Exception as e:
         print("No close button!")
-
+    emails = []
     try:
         time.sleep(random.randint(3, 15))  # Wait for the page to load
         # Locate email element containing "@" in text
-        email_element = driver.find_element(By.XPATH, "//span[contains(text(), '@')]")
-        # for element in email_element:
-        #     email=email_validator_address(element.text)
+        email_element = driver.find_elements(By.XPATH, "//span[contains(text(), '@')]")
+        for element in email_element:
+            print(element.text)
+            # email=email_validator_address(element.text)
+            emails.append(element.text)
         # email = email_validator_address(email_element.text)
-        email = email_element.text
-        return email
+        # email = email_element.text
+        return emails
     except Exception as e:
         print(f"Could not fetch email from {url}")
-        return "null"
+        return []
 
 
-url = "http://localhost:8080/api/v1/shop/"
+url = "http://localhost:8080/api/v1/useeClient/"
 
 payload = {}
 headers = {
@@ -390,8 +428,8 @@ headers = {
 response = requests.request("GET", url, headers=headers, data=payload)
 re = response.json()
 # print(response.text)
-shops = re["returnobject"]
-shops=shops["shops"]
+useeClients = re["returnobject"]
+useeClients=useeClients["useeClients"]
 
 
 # Set up Chrome options (optional)
@@ -435,37 +473,39 @@ except Exception as e:
 
 
 
-for i in range(len(shops)):
-    if not shops[i]["facebook"] is None:
+for i in range(len(useeClients)):
+    if not useeClients[i]["facebook"] is None:
         continue
-    name = shops[i]["name"]
-    area = shops[i]["area"]
+    name = useeClients[i]["name"]
+    area = useeClients[i]["useeClientLocation"]["area"]
     website = get_facebook_cafeteria(name, area)
-    shops[i]["facebook"] = website["facebook"]
+    useeClients[i]["facebook"] = website["facebook"]
 # Wait to observe result
 time.sleep(random.randint(3, 15))
-for i in range(len(shops)):
-    if not shops[i]["email"].__eq__("null"):
+for i in range(len(useeClients)):
+    if not useeClients[i]["emails"]==[]:
         continue
-    source = shops[i]["facebook"]
-    email = fetch_email(source)
-    shops[i]["email"] = email
-    if not email.__eq__("null"):
-        counter+=1
+    source = useeClients[i]["facebook"]
+    emails = fetch_email(source)
+    useeClients[i]["emails"] = emails
+    for email in emails:
+        if not email.__eq__("null"):
+            counter+=1
 
 headers = {
     'Content-Type': 'application/json',
     'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzMxNTM4NDYyLCJpYXQiOjE3MzA2NzQ0NjIsImp0aSI6IjFkYjQ3Mjg1LTU3M2MtNDQzZi1iN2MwLTEwYjEwMDgyZDZjYSJ9.RHPUJ4VwM7B2j2vzow4tKbScO-_QmNo4XIatTHbi03g'
 }
 # API endpoint URL (replace with your actual endpoint)
-url = "http://localhost:8080/api/v1/shop/"
+url = "http://localhost:8080/api/v1/useeClient/"
 
 # Assuming 'final' is your list of dictionaries
-for data_entry in shops:
+for data_entry in useeClients:
     # Send POST request with each entry as JSON
     print(data_entry)
     payload = json.dumps(data_entry)
     response = requests.request("PUT", url, headers=headers, data=payload)
+    print(response.text)
 
 print("All data sent to the API.")
 # print(response.text)
