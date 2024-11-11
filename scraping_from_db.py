@@ -13,8 +13,6 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.common.keys import Keys
 from urllib.parse import urlparse
 import requests
-from sympy.physics.units import length
-import requests
 import json
 from email_validator import validate_email, EmailNotValidError
 
@@ -436,6 +434,7 @@ useeClients=useeClients["useeClients"]
 options = Options()
 options.add_argument("--start-maximized")
 options.add_argument("--lang=en")
+options.add_argument("--disable-usb-discovery")
 # options.add_argument("--headless")  # Optional, run in headless mode
 
 # Initialize the WebDriver
@@ -502,7 +501,7 @@ url = "http://localhost:8080/api/v1/useeClient/"
 # Assuming 'final' is your list of dictionaries
 for data_entry in useeClients:
     # Send POST request with each entry as JSON
-    print(data_entry)
+    # print(data_entry)
     payload = json.dumps(data_entry)
     response = requests.request("PUT", url, headers=headers, data=payload)
     print(response.text)

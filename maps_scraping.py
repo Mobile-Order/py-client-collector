@@ -58,7 +58,7 @@ def is_valid_url(url):
 
 excluded_domains = ["e-food", "wolt", "box", "xo", "vrisko", "instagram", "google-maps"]
 municipalities_of_athens = [
-    "Agia Paraskeyi",
+    # "Agia Paraskeyi",
     # "Agia Varvara",
     # "Agios Dimitrios",
     # "Alimos",
@@ -73,12 +73,13 @@ municipalities_of_athens = [
     # "Eleysina",
     # "Kaisariani",
     # "Kifisia",
-    # "Nikaia",
+    "Nikaia",
     # "Pallini",
     # "Papagos-Cholargos",
     # "Peiras",
     # "Penteli",
     # "Chaidari",
+    # "Chalandri",
     # "Dafni-Ymittos",
     # "Egaleo",
     # "Elliniko-Argyroupoli",
@@ -167,7 +168,7 @@ def get_cafeterias_maps_urls(url):
     last_height = driver.execute_script("return arguments[0].scrollHeight", scrollable_div)
     while True:
         driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight);", scrollable_div)
-        # time.sleep(2)  # Wait to load content
+        time.sleep(2)  # Wait to load content
         new_height = driver.execute_script("return arguments[0].scrollHeight", scrollable_div)
         if new_height == last_height:
             break  # Break the loop if no new content is loaded
@@ -341,11 +342,11 @@ def get_cafeterias_infos_from_maps(url):
                     street_number_part+=" "+address_parts[i].strip()
                     i+=1
             # Second part: Area and Postal Code
-            i=0
+            i=length-2
             area_postal_code_part = address_parts[length - 1].strip()
-            while i < len(address_parts) and not contains_numbers(area_postal_code_part):
+            while i > 0 and not contains_numbers(area_postal_code_part):
                 area_postal_code_part = address_parts[i].strip()
-                i+=1
+                i-=1
             # Split street and number (assuming number is the last word)
             street_parts = street_number_part.rsplit(' ', 3)
             street = street_parts[0]
@@ -400,9 +401,12 @@ def get_facebook_cafeteria(cafeteria_name, area_name):
     except NoSuchElementException:
         print("No 'Reject All' button found, proceeding without clicking.")
     time.sleep(random.randint(3, 15))
-    search_box = driver.find_element(By.NAME, "q")
-    search_box.send_keys(search_query)
-    search_box.send_keys(Keys.RETURN)
+    try:
+        search_box = driver.find_element(By.NAME, "q")
+        search_box.send_keys(search_query)
+        search_box.send_keys(Keys.RETURN)
+    except NoSuchElementException as e:
+        print("Search box element not found.")
     # Wait for the results to load
     time.sleep(random.randint(3, 15))
     # Initialize URL as None in case no valid URL is found
@@ -421,8 +425,9 @@ def get_facebook_cafeteria(cafeteria_name, area_name):
         # If no valid URL was found, output None
         if first_valid_url is None:
             print(f"No valid URL found for {cafeteria_name}.")
+            first_valid_url = "null"
     except NoSuchElementException:
-        first_valid_url = None
+        first_valid_url = "null"
         print(f"No URLs found for {cafeteria_name}.")
     return {"facebook": first_valid_url}
 
@@ -431,7 +436,7 @@ def fetch_email(url):
         driver.get(url)
         print("valid")
     else:
-        return "null"
+        return []
     try:
         # Locate and click the "Decline optional cookies" button
         decline_button = driver.find_element(By.XPATH,
@@ -456,20 +461,21 @@ def fetch_email(url):
         # Locate email element containing "@" in text
         email_element = driver.find_elements(By.XPATH, "//span[contains(text(), '@')]")
         for element in email_element:
+            print(element.text)
             # email=email_validator_address(element.text)
             emails.append(element.text)
-            print(element.text)
         # email = email_validator_address(email_element.text)
         # email = email_element.text
         return emails
     except Exception as e:
         print(f"Could not fetch email from {url}")
-        return "null"
+        return []
 
 # Set up Chrome options (optional)
 options = Options()
 options.add_argument("--start-maximized")
 options.add_argument("--lang=en")
+options.add_argument("--disable-usb-discovery")
 # options.add_argument("--headless")  # Optional, run in headless mode
 # Initialize the WebDriver
 driver = webdriver.Chrome(options=options)
