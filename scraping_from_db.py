@@ -416,7 +416,7 @@ def fetch_email(url):
         return []
 
 
-url = "http://localhost:8080/api/v1/useeClient/"
+url = "http://localhost:8080/api/v1/useeClient?size=10000"
 
 payload = {}
 headers = {
@@ -425,9 +425,7 @@ headers = {
 
 response = requests.request("GET", url, headers=headers, data=payload)
 re = response.json()
-# print(response.text)
-useeClients = re["returnobject"]
-useeClients=useeClients["useeClients"]
+useeClients = re["returnobject"]["page"]["content"]
 
 
 # Set up Chrome options (optional)
