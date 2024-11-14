@@ -1,23 +1,23 @@
 import csv
+import json
+import random
 import re
+import time
+from urllib.parse import urlparse
 
+import requests
+import requests
+from bs4 import BeautifulSoup
+from email_validator import validate_email, EmailNotValidError
 from selenium import webdriver
 from selenium.common import NoSuchElementException
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
-from bs4 import BeautifulSoup
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from urllib.parse import urlparse
-import requests
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from sympy import false
 from sympy.physics.units import length
-import requests
-import json
-from email_validator import validate_email, EmailNotValidError
-import random
 
 
 # proxy_list = ["206.192.226.90:39593", "149.20.253.58:12551",]
@@ -73,13 +73,13 @@ municipalities_of_athens = [
     # "Eleysina",
     # "Kaisariani",
     # "Kifisia",
-    "Nikaia",
+    # "Nikaia",
     # "Pallini",
     # "Papagos-Cholargos",
-    # "Peiras",
+    # "Peireas",
     # "Penteli",
     # "Chaidari",
-    # "Chalandri",
+    "Chalandri",
     # "Dafni-Ymittos",
     # "Egaleo",
     # "Elliniko-Argyroupoli",

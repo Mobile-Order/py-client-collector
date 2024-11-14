@@ -1,20 +1,19 @@
-import csv
+import json
 import random
 import re
+import time
+from urllib.parse import urlparse
 
+import requests
+from bs4 import BeautifulSoup
+from email_validator import validate_email, EmailNotValidError
 from selenium import webdriver
 from selenium.common import NoSuchElementException
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
-from bs4 import BeautifulSoup
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from urllib.parse import urlparse
-import requests
-import json
-from email_validator import validate_email, EmailNotValidError
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 counter=0
 excluded_domains = ["e-food", "wolt", "box", "xo", "vrisko", "instagram", "google-maps"]
