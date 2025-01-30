@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from email_validator import validate_email, EmailNotValidError
 from selenium import webdriver
 from selenium.common import NoSuchElementException
+from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -79,7 +80,7 @@ municipalities_of_athens = [
     # "Peireas",
     # "Penteli",
     # "Chaidari",
-    "Chalandri",
+    # "Chalandri",
     # "Dafni-Ymittos",
     # "Egaleo",
     # "Elliniko-Argyroupoli",
@@ -92,7 +93,7 @@ municipalities_of_athens = [
     # "Kamatero",
     # "Keratsini-Drapetsona",
     # "Korydallos",
-    # "Marousi",
+    "Marousi",
     # "Moschato-Tavros",
     # "Nea Ionia",
     # "Nea Smyrni",
@@ -136,23 +137,33 @@ def get_cafeterias_maps_urls(url):
     else:
         return []
     try:
-        language_button = driver.find_element(By.XPATH, "//button[@jscontroller='soHxf']")
+        language_button = driver.find_element(By.XPATH, "//button[@jscontroller='O626Fe']")
         language_button.click()
         print("Clicked language selector button.")
     except NoSuchElementException:
         print("Language selector button not found.")
-
+    # time.sleep(1000)
     # Now select "English (United States)" from the language options
     time.sleep(random.randint(3, 15))  # Brief pause to ensure language menu is loaded
     try:
-        # Locate "English (United States)" and click it
-        english_us_option = driver.find_element(By.XPATH,
-                                                "//span[contains(@class, 'VfPpkd-StrnGf-rymPhb-b9t22c') and .//span[text()='English'] and .//span[text()='United States']]")
-        english_us_option.click()
+       # Initialize ActionChains
+        actions = ActionChains(driver)
+        x=0
+        while x<15:
+            x+=1
+            print(x)
+            actions.send_keys(Keys.ARROW_DOWN).perform()
+        time.sleep(1)
+       # Locate "English (United States)" and click it
+        english_us_option = driver.find_element(By.XPATH, "//li[contains(@class, 'W7g1Rb-rymPhb-ibnC6b') and @data-lc='en']")
+       #  time.sleep(10)
+       #  english_us_option.click()
+       #  button = driver.find_element_by_xpath("//span[contains(@class, 'RBHQF-ksKsZd') and @jscontroller='LBaJxb' and @jsname='m9ZlFb']")
+        driver.execute_script("arguments[0].click();", english_us_option)
         print("Selected 'English (United States)' language.")
     except NoSuchElementException:
         print("English (United States) language option not found.")
-
+    # time.sleep(1000)
     time.sleep(random.randint(3, 15))  # Brief pause after language selection
 
     try:
