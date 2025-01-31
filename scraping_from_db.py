@@ -21,6 +21,27 @@ excluded_domains = ["e-food", "wolt", "box", "xo", "vrisko", "instagram", "googl
 def contains_numbers(s):
     return any(char.isdigit() for char in s)
 
+def is_valid_url(url):
+    # Check if the URL is well-formed
+    parsed_url = urlparse(url)
+    if not parsed_url.scheme or not parsed_url.netloc:
+        print(f"Invalid URL format: {url}")
+        return False
+
+    # Check if the URL is reachable by making a HEAD request
+    try:
+        response = requests.head(url, timeout=5)
+        # A status code <400 is usually a good indicator the URL is reachable
+        if response.status_code < 400:
+            return True
+        else:
+            print(f"URL unreachable, status code: {response.status_code} for {url}")
+            return False
+
+    except requests.RequestException as e:
+        print(f"Error reaching URL {url}: {e}")
+        return False
+
 def email_validator_address(input_text):
     email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
 
@@ -329,9 +350,12 @@ def get_facebook_cafeteria(cafeteria_name, area_name):
     except NoSuchElementException:
         print("No 'Reject All' button found, proceeding without clicking.")
     time.sleep(random.randint(3, 15))
-    search_box = driver.find_element(By.NAME, "q")
-    search_box.send_keys(search_query)
-    search_box.send_keys(Keys.RETURN)
+    try:
+        search_box = driver.find_element(By.NAME, "q")
+        search_box.send_keys(search_query)
+        search_box.send_keys(Keys.RETURN)
+    except NoSuchElementException as e:
+        print("Search box element not found.")
     # Wait for the results to load
     time.sleep(random.randint(3, 15))
     # Initialize URL as None in case no valid URL is found
@@ -350,30 +374,12 @@ def get_facebook_cafeteria(cafeteria_name, area_name):
         # If no valid URL was found, output None
         if first_valid_url is None:
             print(f"No valid URL found for {cafeteria_name}.")
+            first_valid_url = "null"
     except NoSuchElementException:
-        first_valid_url = None
+        first_valid_url = "null"
         print(f"No URLs found for {cafeteria_name}.")
     return {"facebook": first_valid_url}
 
-def is_valid_url(url):
-    # Check if the URL format is well-formed
-    parsed_url = urlparse(url)
-    if not parsed_url.scheme or not parsed_url.netloc:
-        print(f"Invalid URL format: {url}")
-        return False
-
-    # Check if the URL is reachable
-    try:
-        response = requests.head(url, timeout=5)  # Use HEAD to check without downloading content
-        if response.status_code < 400:
-            print(f"URL is valid and reachable: {url}")
-            return True
-        else:
-            print(f"URL returned an error status: {response.status_code}")
-            return False
-    except requests.RequestException as e:
-        print(f"URL is not reachable: {url} - {e}")
-        return False
 def fetch_email(url):
     if is_valid_url(url):
         driver.get(url)
@@ -414,16 +420,16 @@ def fetch_email(url):
         print(f"Could not fetch email from {url}")
         return []
 
-
-url = "http://localhost:8080/api/v1/useeClient?size=10000"
+url = "http://localhost:8080/api/v1/usee-client?size=10000"
 
 payload = {}
 headers = {
-  'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzMxNTM4NDYyLCJpYXQiOjE3MzA2NzQ0NjIsImp0aSI6IjFkYjQ3Mjg1LTU3M2MtNDQzZi1iN2MwLTEwYjEwMDgyZDZjYSJ9.RHPUJ4VwM7B2j2vzow4tKbScO-_QmNo4XIatTHbi03g'
+  'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzM5MTg5ODcyLCJpYXQiOjE3MzgzMjU4NzIsImp0aSI6Ijk1ZmI5YTExLWE0YTYtNDRkYy04YjA1LWEyY2NhMjU3ZDkzZiJ9.XaU0auLpsk-EQ9OvjxC0-keZ2ia9Bdy0D-H30Wo-9dE; Path=/; Expires=Tue, 18 Jun 2052 12:17:52 GMT;'
 }
 
 response = requests.request("GET", url, headers=headers, data=payload)
 re = response.json()
+print(re)
 useeClients = re["returnobject"]["page"]["content"]
 
 
@@ -490,10 +496,10 @@ for i in range(len(useeClients)):
 
 headers = {
     'Content-Type': 'application/json',
-    'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzMxNTM4NDYyLCJpYXQiOjE3MzA2NzQ0NjIsImp0aSI6IjFkYjQ3Mjg1LTU3M2MtNDQzZi1iN2MwLTEwYjEwMDgyZDZjYSJ9.RHPUJ4VwM7B2j2vzow4tKbScO-_QmNo4XIatTHbi03g'
+    'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzM5MTg5ODcyLCJpYXQiOjE3MzgzMjU4NzIsImp0aSI6Ijk1ZmI5YTExLWE0YTYtNDRkYy04YjA1LWEyY2NhMjU3ZDkzZiJ9.XaU0auLpsk-EQ9OvjxC0-keZ2ia9Bdy0D-H30Wo-9dE; Path=/; Expires=Tue, 18 Jun 2052 12:17:52 GMT;'
 }
 # API endpoint URL (replace with your actual endpoint)
-url = "http://localhost:8080/api/v1/useeClient/"
+url = "http://localhost:8080/api/v1/usee-client/"
 
 # Assuming 'final' is your list of dictionaries
 for data_entry in useeClients:

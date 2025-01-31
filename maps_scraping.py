@@ -561,7 +561,7 @@ print("Data successfully written to 'output.csv'.")
 # Headers, if required (e.g., for JSON content and authorization)
 headers = {
   'Content-Type': 'application/json',
-  'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzMxNTM4NDYyLCJpYXQiOjE3MzA2NzQ0NjIsImp0aSI6IjFkYjQ3Mjg1LTU3M2MtNDQzZi1iN2MwLTEwYjEwMDgyZDZjYSJ9.RHPUJ4VwM7B2j2vzow4tKbScO-_QmNo4XIatTHbi03g'
+  'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzM5MTg5ODcyLCJpYXQiOjE3MzgzMjU4NzIsImp0aSI6Ijk1ZmI5YTExLWE0YTYtNDRkYy04YjA1LWEyY2NhMjU3ZDkzZiJ9.XaU0auLpsk-EQ9OvjxC0-keZ2ia9Bdy0D-H30Wo-9dE; Path=/; Expires=Tue, 18 Jun 2052 12:17:52 GMT;'
 }
 # API endpoint URL (replace with your actual endpoint)
 url = "http://localhost:8080/api/v1/useeClient/"
