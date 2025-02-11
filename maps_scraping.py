@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 import requests
 import requests
 from bs4 import BeautifulSoup
-from email_validator import validate_email, EmailNotValidError
 from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver import ActionChains
@@ -25,6 +24,8 @@ from sympy.physics.units import length
 # def rand_port():
 #     port = random.choice(proxy_list)
 #     return port
+def remove_non_bmp(text):
+    return "".join(c for c in text if c <= "\U0000FFFF")  # Keeps only BMP characters
 
 def contains_numbers(s):
     return any(char.isdigit() for char in s)
@@ -93,12 +94,12 @@ municipalities_of_athens = [
     # "Kamatero",
     # "Keratsini-Drapetsona",
     # "Korydallos",
-    "Marousi",
+    # "Marousi",
     # "Moschato-Tavros",
     # "Nea Ionia",
     # "Nea Smyrni",
     # "Palaio Faliro",
-    # "Perama",
+    "Perama",
     # "Peristeri",
     # "Petroupoli",
     # "Psychiko",
@@ -144,7 +145,7 @@ def get_cafeterias_maps_urls(url):
         print("Language selector button not found.")
     # time.sleep(1000)
     # Now select "English (United States)" from the language options
-    time.sleep(random.randint(3, 15))  # Brief pause to ensure language menu is loaded
+    # time.sleep(random.randint(3, 10))  # Brief pause to ensure language menu is loaded
     try:
        # Initialize ActionChains
         actions = ActionChains(driver)
@@ -164,7 +165,7 @@ def get_cafeterias_maps_urls(url):
     except NoSuchElementException:
         print("English (United States) language option not found.")
     # time.sleep(1000)
-    time.sleep(random.randint(3, 15))  # Brief pause after language selection
+    time.sleep(random.randint(3, 10))  # Brief pause after language selection
 
     try:
         reject_button = driver.find_element(By.XPATH,"//button[@aria-label='Reject all']")
@@ -173,7 +174,7 @@ def get_cafeterias_maps_urls(url):
     except NoSuchElementException:
         print("No 'Reject All' button found, proceeding without clicking.")
     # Scroll to load all results
-    scrollable_div = WebDriverWait(driver, 15).until(
+    scrollable_div = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[@role='feed']"))
     )
     last_height = driver.execute_script("return arguments[0].scrollHeight", scrollable_div)
@@ -185,7 +186,7 @@ def get_cafeterias_maps_urls(url):
             break  # Break the loop if no new content is loaded
         last_height = new_height
     # Get the HTML content of the page
-    time.sleep(random.randint(3, 15))
+    time.sleep(random.randint(3, 10))
     html_content = driver.page_source
     soup = BeautifulSoup(html_content, 'html.parser')
     # Extract the cafe names and URLs
@@ -223,7 +224,7 @@ def get_cafeterias_infos_from_maps(url):
         # If no button is found, print a message and continue
         print("Button with aria-label 'Απόρριψη όλων' not found. Skipping...")
     # Give the page some time to load
-    time.sleep(random.randint(3, 15))
+    time.sleep(random.randint(3, 10))
     # Get page content
     html_content = driver.page_source
     # Parse the HTML content
@@ -403,7 +404,7 @@ def get_facebook_cafeteria(cafeteria_name, area_name):
     print(f"Searching for: {search_query}")
     # Navigate to Google and search for the cafeteria name
     driver.get("https://www.google.com/")
-    time.sleep(random.randint(3, 15))
+    time.sleep(random.randint(3, 10))
     # Click on the "Reject All" button if it appears
     try:
         reject_button = driver.find_element(By.ID, "W0wltc")
@@ -411,20 +412,29 @@ def get_facebook_cafeteria(cafeteria_name, area_name):
         print("Clicked 'Reject All' button.")
     except NoSuchElementException:
         print("No 'Reject All' button found, proceeding without clicking.")
-    time.sleep(random.randint(3, 15))
+    time.sleep(random.randint(3, 10))
     try:
-        search_box = driver.find_element(By.NAME, "q")
-        search_box.send_keys(search_query)
-        search_box.send_keys(Keys.RETURN)
+        # search_box = driver.find_element(By.NAME, "q")
+        # print(search_query)
+        # search_box.send_keys(search_query)
+        # search_box.send_keys(Keys.RETURN)
+        query = f"{cafeteria_name} {area_name} Facebook"
+        query = remove_non_bmp(query)
+        google_search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+        driver.get(google_search_url)
     except NoSuchElementException as e:
         print("Search box element not found.")
     # Wait for the results to load
-    time.sleep(random.randint(3, 15))
+    time.sleep(random.randint(3, 10))
     # Initialize URL as None in case no valid URL is found
     first_valid_url = None
     try:
         # Find all <a> elements with jsname="UWckNb"
+       all_results=[]
+       while len(all_results)==0 :
         all_results = driver.find_elements(By.XPATH, "//a[@jsname='UWckNb']")
+        time.sleep(10)
 
         for result in all_results:
             url = result.get_attribute("href")
@@ -468,7 +478,7 @@ def fetch_email(url):
         print("No close button!")
     emails = []
     try:
-        time.sleep(random.randint(3, 15))  # Wait for the page to load
+        time.sleep(random.randint(3, 10))  # Wait for the page to load
         # Locate email element containing "@" in text
         email_element = driver.find_elements(By.XPATH, "//span[contains(text(), '@')]")
         for element in email_element:
@@ -539,7 +549,7 @@ except Exception as e:
 # login_button.click()
 
 # Wait to observe result
-time.sleep(random.randint(3, 15))
+time.sleep(random.randint(3, 10))
 for i in range(len(websites)):
     url = websites[i]["facebook"]
     emails = fetch_email(url)
@@ -561,10 +571,10 @@ print("Data successfully written to 'output.csv'.")
 # Headers, if required (e.g., for JSON content and authorization)
 headers = {
   'Content-Type': 'application/json',
-  'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzM5MTg5ODcyLCJpYXQiOjE3MzgzMjU4NzIsImp0aSI6Ijk1ZmI5YTExLWE0YTYtNDRkYy04YjA1LWEyY2NhMjU3ZDkzZiJ9.XaU0auLpsk-EQ9OvjxC0-keZ2ia9Bdy0D-H30Wo-9dE; Path=/; Expires=Tue, 18 Jun 2052 12:17:52 GMT;'
+  'Cookie': "auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzQwMDYzMDYzLCJpYXQiOjE3MzkxOTkwNjMsImp0aSI6ImMzMTM0YjFmLTBhZjItNDNmNi04YmYyLWNhYTY5OTY3ZTZjNiJ9.45oQjz8qSYQc7LKOjh6znS34206hBFk2b_u68n7L-7g; Path=/; Expires=Fri, 28 Jun 2052 14:51:03 GMT;"
 }
 # API endpoint URL (replace with your actual endpoint)
-url = "http://localhost:8080/api/v1/useeClient/"
+url = "http://localhost:8080/api/v1/usee-client/"
 
 # Assuming 'final' is your list of dictionaries
 for data_entry in final:

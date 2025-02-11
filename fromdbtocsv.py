@@ -36,7 +36,7 @@ url = "http://localhost:8080/api/v1/usee-client?size=10000"
 
 payload = {}
 headers = {
-  'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzM3NzYwNzE1LCJpYXQiOjE3MzY4OTY3MTUsImp0aSI6IjM3ZDk0NjkyLWE3ZTQtNGJiMi1hZWQ5LTMzZjQ4NmY2OGJlOCJ9.X4yT1YfSJC9QTG_8wa02RS5n3eWkLAQE1en84du9E5w'
+  'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzM5MTg4OTc5LCJpYXQiOjE3MzgzMjQ5NzksImp0aSI6IjZlN2E0OWM4LTRlZjMtNGFmMC05M2UwLWMzYTg2YmI0NjJlMyJ9.HUc93KLiu2jV1OhHNF_vD_YBaP06zKM5Ip9ZQJM1Jjs; Path=/; Expires=Tue, 18 Jun 2052 12:02:58 GMT;'
 }
 
 response = requests.request("GET", url, headers=headers, data=payload)

@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
-from email_validator import validate_email, EmailNotValidError
 from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
@@ -351,9 +350,15 @@ def get_facebook_cafeteria(cafeteria_name, area_name):
         print("No 'Reject All' button found, proceeding without clicking.")
     time.sleep(random.randint(3, 15))
     try:
-        search_box = driver.find_element(By.NAME, "q")
-        search_box.send_keys(search_query)
-        search_box.send_keys(Keys.RETURN)
+        # search_box = driver.find_element(By.NAME, "q")
+        # print(search_query)
+        # search_box.send_keys(search_query)
+        # search_box.send_keys(Keys.RETURN)
+        query = f"{cafeteria_name} {area_name} Facebook"
+        query = remove_non_bmp(query)
+        google_search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+        driver.get(google_search_url)
     except NoSuchElementException as e:
         print("Search box element not found.")
     # Wait for the results to load
@@ -424,12 +429,11 @@ url = "http://localhost:8080/api/v1/usee-client?size=10000"
 
 payload = {}
 headers = {
-  'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzM5MTg5ODcyLCJpYXQiOjE3MzgzMjU4NzIsImp0aSI6Ijk1ZmI5YTExLWE0YTYtNDRkYy04YjA1LWEyY2NhMjU3ZDkzZiJ9.XaU0auLpsk-EQ9OvjxC0-keZ2ia9Bdy0D-H30Wo-9dE; Path=/; Expires=Tue, 18 Jun 2052 12:17:52 GMT;'
+  'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzM5MTg4OTc5LCJpYXQiOjE3MzgzMjQ5NzksImp0aSI6IjZlN2E0OWM4LTRlZjMtNGFmMC05M2UwLWMzYTg2YmI0NjJlMyJ9.HUc93KLiu2jV1OhHNF_vD_YBaP06zKM5Ip9ZQJM1Jjs; Path=/; Expires=Tue, 18 Jun 2052 12:02:58 GMT;'
 }
 
 response = requests.request("GET", url, headers=headers, data=payload)
 re = response.json()
-print(re)
 useeClients = re["returnobject"]["page"]["content"]
 
 
@@ -476,7 +480,7 @@ except Exception as e:
 
 
 for i in range(len(useeClients)):
-    if not useeClients[i]["facebook"] is None:
+    if useeClients[i]["facebook"]!="null":
         continue
     name = useeClients[i]["name"]
     area = useeClients[i]["useeClientLocation"]["area"]
@@ -496,7 +500,7 @@ for i in range(len(useeClients)):
 
 headers = {
     'Content-Type': 'application/json',
-    'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzM5MTg5ODcyLCJpYXQiOjE3MzgzMjU4NzIsImp0aSI6Ijk1ZmI5YTExLWE0YTYtNDRkYy04YjA1LWEyY2NhMjU3ZDkzZiJ9.XaU0auLpsk-EQ9OvjxC0-keZ2ia9Bdy0D-H30Wo-9dE; Path=/; Expires=Tue, 18 Jun 2052 12:17:52 GMT;'
+    'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzM5MTg4OTc5LCJpYXQiOjE3MzgzMjQ5NzksImp0aSI6IjZlN2E0OWM4LTRlZjMtNGFmMC05M2UwLWMzYTg2YmI0NjJlMyJ9.HUc93KLiu2jV1OhHNF_vD_YBaP06zKM5Ip9ZQJM1Jjs; Path=/; Expires=Tue, 18 Jun 2052 12:02:58 GMT;'
 }
 # API endpoint URL (replace with your actual endpoint)
 url = "http://localhost:8080/api/v1/usee-client/"

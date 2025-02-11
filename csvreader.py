@@ -65,11 +65,11 @@ data = read_csv_to_json(filename)
 # Example of printing one row to check format
 
 headers = {
-    'Content-Type': 'application/json',
-    'Cookie': 'auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzMxNTM4NDYyLCJpYXQiOjE3MzA2NzQ0NjIsImp0aSI6IjFkYjQ3Mjg1LTU3M2MtNDQzZi1iN2MwLTEwYjEwMDgyZDZjYSJ9.RHPUJ4VwM7B2j2vzow4tKbScO-_QmNo4XIatTHbi03g'
+  'Content-Type': 'application/json',
+  'Cookie': "auth_token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXYiLCJyb2xlIjoiUk9MRV9BRE1JTiIsImlzcyI6InVzZWUtYXBwIiwiZXhwIjoxNzQwMDYzMDYzLCJpYXQiOjE3MzkxOTkwNjMsImp0aSI6ImMzMTM0YjFmLTBhZjItNDNmNi04YmYyLWNhYTY5OTY3ZTZjNiJ9.45oQjz8qSYQc7LKOjh6znS34206hBFk2b_u68n7L-7g; Path=/; Expires=Fri, 28 Jun 2052 14:51:03 GMT;"
 }
 # API endpoint URL (replace with your actual endpoint)
-url = "http://localhost:8080/api/v1/useeClient/"
+url = "http://localhost:8080/api/v1/usee-client/"
 
 # Assuming 'final' is your list of dictionaries
 for data_entry in data:
